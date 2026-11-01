@@ -1,34 +1,56 @@
-use std::{fs, path::PathBuf};
+use grep_impl::{search, search_case_insensitive};
+use std::{
+    env,
+    error::Error,
+    fs::{self},
+    process,
+};
 
-use clap::Parser;
-
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    #[arg(short, long)]
-    // parse a -f/--file argument to get target file
-    file: String,
-    // extra vec to collect misc arguments passed in
-    args: Vec<String>,
+struct Config {
+    pub query: String,
+    pub filepath: String,
+    pub ignore_case: bool,
 }
 
 fn main() {
-    // parse cli arguments
-    let args = Args::parse();
-    // parse the target file from arguments
-    let file = PathBuf::from(args.file);
+    let args = env::args().collect::<Vec<String>>();
 
-    // read file to this string
-    let file = fs::read_to_string(file).expect("File not found lol");
+    let config = Config::build(&args).unwrap_or_else(|err| {
+        println!("Problem parsing arguments: {err}");
+        process::exit(1);
+    });
 
-    // any extra args just consider as target substrings to search for
-    for arg in args.args {
-        // if substring found
-        if file.contains(&arg) {
-            println!("Found: {arg}");
-        } else {
-            // substring not found
-            println!("Did not find: {arg}")
+    if let Err(e) = run(config) {
+        println!("Application error: {e}");
+        process::exit(1);
+    }
+}
+
+fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let contents = fs::read_to_string(config.filepath)?;
+
+    let results = if config.ignore_case {
+        search_case_insensitive(&config.query, &contents)
+    } else {
+        search(&config.query, &contents)
+    };
+
+    for line in results {
+        println!("{line}");
+    }
+    Ok(())
+}
+
+impl Config {
+    fn build(args: &[String]) -> Result<Config, &'static str> {
+        if args.len() < 3 {
+            return Err("not enough arguments");
         }
+
+        Ok(Config {
+            query: args[1].clone(),
+            filepath: args[2].clone(),
+            ignore_case: env::var("IGNORE_CASE").is_ok(),
+        })
     }
 }
