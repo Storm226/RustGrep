@@ -1,0 +1,13 @@
+Herein, we document Tony "what the Future<box<dyn<FnOnce>>>>" Lin's 
+contributions to this project:
+
+As described in this commit f1704868e46c8aca8d8980076a3b6f638eb1f34e, Tony's 
+importance and significance in the scope of this project cannot be understated.
+He provided an excellent implementation and starting point for this project, 
+and inspires the very best in us to this day.
+
+God bless you Tony Lin
+
+
+"Too many words what mean"
+    - Tony Lin
